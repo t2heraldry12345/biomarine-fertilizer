@@ -11,6 +11,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
   <!-- Google Fonts: Cormorant Garamond + Outfit -->
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b2318'/%3E%3Ccircle cx='32' cy='32' r='20' fill='none' stroke='%2342a872' stroke-width='2.5'/%3E%3Cellipse cx='32' cy='32' rx='5' ry='7' fill='%2342a872'/%3E%3Cpath d='M40 28 Q46 26 48 32 Q46 38 40 36' fill='%23a8e063' opacity='0.8'/%3E%3C/svg%3E" />
   <!-- Custom CSS -->
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -51,7 +52,7 @@
   <div class="hero-orb hero-orb-2"></div>
 
   <div class="container hero-content">
-    <div class="row align-items-center min-vh-100">
+    <div class="row align-items-center min-vh-100 pb-5 pb-lg-0">
       <div class="col-lg-6 hero-text">
         <div class="hero-eyebrow">
           <span class="eyebrow-dot"></span>
@@ -77,7 +78,7 @@
             <i class="fa-solid fa-microscope me-2"></i>View Science
           </a>
         </div>
-        <div class="hero-stats mt-5">
+        <div class="hero-stats mt-4 mt-lg-5">
           <div class="stat-chip">
             <span class="stat-num">₱39</span>
             <span class="stat-label">Per 500mL</span>
@@ -95,7 +96,7 @@
         </div>
       </div>
 
-      <div class="col-lg-6 hero-visual mt-5 mt-lg-0">
+      <div class="col-lg-6 hero-visual mt-4 mt-lg-0">
         <div class="hero-img-frame">
           <div class="hero-img-inner">
             <img src="img/Image1.jpg" alt="BioMarine Team" class="hero-main-img" id="heroImg"
@@ -402,12 +403,21 @@
       </div>
     </div>
 
-    <!-- Masonry Photo Grid -->
+    <!-- Photo Carousel -->
     <div class="mt-5">
       <div class="section-tag text-center mb-4">Full Photo Documentation</div>
-      <div class="masonry-grid" id="masonryGrid">
-        <!-- Images will be injected -->
+
+      <div class="photo-carousel-wrap" id="photoCarouselWrap">
+        <!-- slides injected by JS -->
+        <button class="pcar-btn pcar-prev" id="pcarPrev"><i class="fa-solid fa-chevron-left"></i></button>
+        <div class="pcar-track-outer">
+          <div class="pcar-track" id="pcarTrack"></div>
+        </div>
+        <button class="pcar-btn pcar-next" id="pcarNext"><i class="fa-solid fa-chevron-right"></i></button>
       </div>
+      <div class="pcar-dots" id="pcarDots"></div>
+      <div class="pcar-counter" id="pcarCounter"></div>
+
       <!-- Lightbox -->
       <div class="lightbox-overlay" id="lightbox">
         <button class="lightbox-close" id="lightboxClose"><i class="fa-solid fa-xmark"></i></button>
@@ -427,16 +437,46 @@
     <div class="row mt-5">
       <div class="col-lg-10 mx-auto">
         <div class="video-showcase">
+
+          <!-- Taglines -->
           <div class="video-showcase-head">
-            <div class="video-taglines mt-3">
-              <p class="mb-2"><strong>School Tagline:</strong> Basta Vicentinian Tanan Masarangan, Tanan Masarangan Basta Vicentinian</p>
-              <p class="mb-0"><strong>City Tagline:</strong> Bilis Cadiz Ugyon Cadiznon</p>
+            <div class="video-taglines">
+
+              <div class="video-tagline-item">
+                <div class="vt-icon"><i class="fa-solid fa-school"></i></div>
+                <div class="vt-text">
+                  <span class="vt-label">School Tagline</span>
+                  <span class="vt-quote">Basta Vicentinian Tanan Masarangan, Tanan Masarangan Basta Vicentinian</span>
+                </div>
+              </div>
+
+              <div class="video-tagline-item">
+                <div class="vt-icon"><i class="fa-solid fa-map-pin"></i></div>
+                <div class="vt-text">
+                  <span class="vt-label">City Tagline</span>
+                  <span class="vt-quote">Bilis Cadiz Ugyon Cadiznon</span>
+                </div>
+              </div>
+
             </div>
           </div>
-          <video id="mainVideoInline" class="video-inline-player" controls preload="metadata" poster="img/Image10.jpg">
-            <source src="img/Video.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
+
+          <!-- Video Frame -->
+          <div class="video-frame-wrap">
+            <div class="video-frame-corner tl"></div>
+            <div class="video-frame-corner tr"></div>
+            <div class="video-frame-corner bl"></div>
+            <div class="video-frame-corner br"></div>
+            <div class="video-rec-badge">
+              <span class="rec-dot"></span>
+              <span>BioMarine FAA</span>
+            </div>
+            <video id="mainVideoInline" class="video-inline-player" controls preload="metadata" poster="img/Image10.jpg">
+              <source src="img/Video.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+
         </div>
       </div>
     </div>
@@ -650,7 +690,7 @@
         <div class="col-md-2 text-center">
           <div class="school-logo-icon"><i class="fa-solid fa-school-flag"></i></div>
         </div>
-        <div class="col-md-7">
+        <div class="col-md-7 col-12">
           <small class="text-muted d-block">Republic of the Philippines · Department of Education · Negros Island Region</small>
           <strong>Schools Division of Cadiz City</strong>
           <p class="mb-0">Dr. Vicente F. Gustillo Memorial National High School</p>
@@ -685,7 +725,7 @@
             </div>
           </div>
         </div>
-        <div class="col-lg-2 col-6">
+        <div class="col-lg-2 col-6 col-sm-6">
           <h6 class="footer-heading">Navigation</h6>
           <ul class="footer-links">
             <li><a href="#home"><i class="fa-solid fa-chevron-right me-1"></i>Home</a></li>
