@@ -7,13 +7,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const inlineVideo = document.getElementById("mainVideoInline");
   const galleryEmptyNotice = document.getElementById("galleryEmptyNotice");
   const heroParticles = document.getElementById("particles");
-  const masonryGrid = document.getElementById("masonryGrid");
   const lightbox = document.getElementById("lightbox");
   const lightboxImg = document.getElementById("lightboxImg");
   const lightboxCaption = document.getElementById("lightboxCaption");
   const lightboxClose = document.getElementById("lightboxClose");
   const lightboxPrev = document.getElementById("lightboxPrev");
   const lightboxNext = document.getElementById("lightboxNext");
+  // Carousel elements
+  const pcarTrack   = document.getElementById("pcarTrack");
+  const pcarPrev    = document.getElementById("pcarPrev");
+  const pcarNext    = document.getElementById("pcarNext");
+  const pcarDots    = document.getElementById("pcarDots");
+  const pcarCounter = document.getElementById("pcarCounter");
+  // Keep masonryGrid ref for empty notice compat
+  const masonryGrid = pcarTrack;
 
   // Lightbox state
   let lightboxImages = [];
@@ -55,44 +62,111 @@ document.addEventListener("DOMContentLoaded", () => {
     return [...unique];
   };
 
-  // ─── Build masonry gallery ────────────────────────────
-  const buildMasonry = async () => {
-    if (!masonryGrid) return;
-    const imageNumbers = Array.from({ length: 36 }, (_, i) => i + 1);
-    const resolvedImages = [];
+  // ─── Photo Carousel (responsive: 4 desktop / 2 mobile) ──
+  const IMGS_PER_SLIDE = window.innerWidth <= 767 ? 2 : 4;
+  let carSlideIndex = 0;
+  let carSlides = [];   // each slide = array of {src,label}
 
+  const buildMasonry = async () => {
+    if (!pcarTrack) return;
+
+    // Skip images already used in other sections
+    const usedNumbers = new Set([1,2,3,4,5,6,7,8,9,10,31,32,33,34,35,36]);
+    const imageNumbers = Array.from({ length: 36 }, (_, i) => i + 1)
+      .filter(n => !usedNumbers.has(n));
+
+    const resolvedImages = [];
     for (const num of imageNumbers) {
-      const rawSrc = `img/Image${num}.jpg`;
-      const candidates = buildMediaCandidates(rawSrc);
+      const candidates = [
+        `img/Image${num}.jpg`, `img/image${num}.jpg`,
+        `img/Image${num}.JPG`, `img/Image${num}.jpeg`,
+        `img/Image${num}.png`, `img/Image${num}.webp`,
+      ];
       for (const c of candidates) {
         const exists = await testImageCandidate(c);
-        if (exists) {
-          resolvedImages.push({ src: c, label: `Image ${num}` });
-          break;
-        }
+        if (exists) { resolvedImages.push({ src: c, label: `Photo ${num}` }); break; }
       }
     }
 
     if (resolvedImages.length === 0) {
-      masonryGrid.classList.add("d-none");
+      const wrap = document.getElementById("photoCarouselWrap");
+      if (wrap) wrap.classList.add("d-none");
+      if (pcarDots) pcarDots.classList.add("d-none");
       if (galleryEmptyNotice) galleryEmptyNotice.classList.remove("d-none");
       return;
     }
 
     lightboxImages = resolvedImages;
 
-    resolvedImages.forEach(({ src, label }, idx) => {
-      const item = document.createElement("div");
-      item.className = "masonry-item";
-      item.innerHTML = `
-        <img src="${src}" alt="${label}" loading="lazy" />
-        <div class="masonry-overlay">
-          <i class="fa-solid fa-magnifying-glass-plus masonry-overlay-icon"></i>
-        </div>
+    // Chunk into groups of 4
+    for (let i = 0; i < resolvedImages.length; i += IMGS_PER_SLIDE) {
+      carSlides.push(resolvedImages.slice(i, i + IMGS_PER_SLIDE));
+    }
+
+    // Build track slides
+    carSlides.forEach((group, sIdx) => {
+      const slide = document.createElement("div");
+      slide.className = "pcar-slide-group";
+      slide.style.cssText = `
+        display: flex; gap: 12px; flex: 0 0 100%; min-width: 100%;
       `;
-      item.addEventListener("click", () => openLightbox(idx));
-      masonryGrid.appendChild(item);
+      group.forEach(({ src, label }, gIdx) => {
+        const globalIdx = sIdx * IMGS_PER_SLIDE + gIdx;
+        const cell = document.createElement("div");
+        cell.className = "pcar-slide";
+
+        const img = document.createElement("img");
+        img.src = src; img.alt = label; img.loading = "lazy";
+        img.onload = () => cell.classList.add("img-loaded");
+
+        const overlay = document.createElement("div");
+        overlay.className = "pcar-slide-overlay";
+        overlay.innerHTML = `
+          <i class="fa-solid fa-magnifying-glass-plus"></i>
+          <span class="pcar-slide-num">${String(globalIdx + 1).padStart(2,"0")} / ${String(resolvedImages.length).padStart(2,"0")}</span>
+        `;
+        cell.appendChild(img);
+        cell.appendChild(overlay);
+        cell.addEventListener("click", () => openLightbox(globalIdx));
+        slide.appendChild(cell);
+      });
+      pcarTrack.appendChild(slide);
     });
+
+    // Build dots
+    carSlides.forEach((_, i) => {
+      const dot = document.createElement("button");
+      dot.className = "pcar-dot" + (i === 0 ? " active" : "");
+      dot.addEventListener("click", () => goToSlide(i));
+      pcarDots.appendChild(dot);
+    });
+
+    updateCarousel();
+
+    if (pcarPrev) pcarPrev.addEventListener("click", () => goToSlide(carSlideIndex - 1));
+    if (pcarNext) pcarNext.addEventListener("click", () => goToSlide(carSlideIndex + 1));
+  };
+
+  const goToSlide = (idx) => {
+    carSlideIndex = Math.max(0, Math.min(idx, carSlides.length - 1));
+    updateCarousel();
+  };
+
+  const updateCarousel = () => {
+    if (!pcarTrack) return;
+    pcarTrack.style.transform = `translateX(calc(-${carSlideIndex * 100}% - ${carSlideIndex * 12}px))`;
+    // dots
+    document.querySelectorAll(".pcar-dot").forEach((d, i) =>
+      d.classList.toggle("active", i === carSlideIndex));
+    // buttons
+    if (pcarPrev) pcarPrev.disabled = carSlideIndex === 0;
+    if (pcarNext) pcarNext.disabled = carSlideIndex === carSlides.length - 1;
+    // counter
+    if (pcarCounter) {
+      const from = carSlideIndex * IMGS_PER_SLIDE + 1;
+      const to   = Math.min((carSlideIndex + 1) * IMGS_PER_SLIDE, lightboxImages.length);
+      pcarCounter.textContent = `${from}–${to} of ${lightboxImages.length} photos`;
+    }
   };
 
   // ─── Lightbox ─────────────────────────────────────────
